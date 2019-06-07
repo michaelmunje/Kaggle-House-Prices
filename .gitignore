@@ -10,3 +10,5 @@ train\.csv
 \.ipynb_checkpoints/
 
 *.csv
+
+__pycache__/
