@@ -1,3 +1,10 @@
+from scipy.stats import skew
+from scipy.special import boxcox1p
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
 import pandas as pd
 
 def print_nan_cols(df, moderate_only = False):
@@ -35,14 +42,9 @@ def convert_categorical_to_numbers(to_change_df, numbers=True):
         return pd.get_dummies(to_change_df)
     else:
         return to_change_df
-    
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_squared_error
+  
 
-def replace_missing_with_ml(df, predict_missing_df, col_to_predict, is_classify=False):
+def replace_missing_with_ml(df, predict_missing_df, col_to_predict, is_classify = False):
 
     predict_missing_df[col_to_predict] = df[col_to_predict]
     adjusted_missing = predict_missing_df[predict_missing_df[col_to_predict].isnull() == False]
@@ -72,3 +74,21 @@ def replace_missing_with_ml(df, predict_missing_df, col_to_predict, is_classify=
     
     predict_missing_df = predict_missing_df.drop(columns=[col_to_predict])
     return df, predict_missing_df
+
+def adjust_skewness(df):
+    numerics = list()
+
+    for col, dtype in zip(df.columns, df.dtypes):
+        if dtype.name != 'object' and dtype.name != 'category':
+            numerics.append(col)
+
+    skewed_feats = df[numerics].apply(lambda x: skew(x.dropna())).sort_values(ascending = False)
+    skewness = pd.DataFrame({'Skew' :skewed_feats})
+    skewness = skewness[abs(skewness) > 0.7]
+
+    skewed_features = skewness.index
+    lam = 0.15
+    for feat in skewed_features:
+        df[feat] = boxcox1p(df[feat], lam)
+        
+    return df
