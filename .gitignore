@@ -12,3 +12,5 @@ train\.csv
 *.csv
 
 __pycache__/
+
+Old Cleaning\.ipynb
